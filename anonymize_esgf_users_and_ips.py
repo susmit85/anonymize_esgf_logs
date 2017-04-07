@@ -16,8 +16,10 @@ import random
 def anonymize(passed_input_file, passed_output_file, delim, log):
     """Input = Tab seperated file, Output = Tab seperated file with IP and
     Username anonymized"""
-
     log.info("Starting anonymization")
+
+    encountered_ip_address = {}
+
     with open(passed_input_file, 'r') as read_f, open(passed_output_file, 'w') as write_f:
         for line in read_f:
             columns = line.split(delim)
@@ -31,16 +33,22 @@ def anonymize(passed_input_file, passed_output_file, delim, log):
             log.debug("Old Username: {}, New Username {}"\
                       .format(username, hash_u))
 
-            # replace last 8 bits of IP with random number
-            try:
-                split_ip = ip.split('.')
-                split_ip[3] = str(random.randint(1, 254))
-                columns[5] = '.'.join(split_ip)
-                log.debug("Old IP: {}, New IP {}".format(ip, columns[5]))
-            except IndexError:
-                log.warning("Malformed IP address on line {}, skipping. "\
-                            .format(index))
-                continue
+            # replace last 8 bits of IP with random number, column[5]
+            if ip in encountered_ip_address:
+                columns[5] = encountered_ip_address[ip]
+            else:
+                try:
+                    split_ip = ip.split('.')
+                    split_ip[3] = str(random.randint(1, 254))
+                    joined_ip = '.'.join(split_ip)
+                    columns[5] = joined_ip
+                    encountered_ip_address[ip] = joined_ip
+                except IndexError:
+                    log.warning("Malformed IP address on line {}, skipping. "\
+                                .format(index))
+                    continue
+
+            log.debug("Old IP: {}, New IP {}".format(ip, columns[5]))
 
             # create new line and write to output file
             new_line = delim.join(columns)
