@@ -22,6 +22,7 @@ def anonymize(passed_input_file, passed_output_file, delim, log):
 
     with open(passed_input_file, 'r') as read_f, open(passed_output_file, 'w') as write_f:
         for line in read_f:
+            #get the parameters from this line
             columns = line.split(delim)
             index = columns[0]
             username = columns[1]
@@ -34,8 +35,12 @@ def anonymize(passed_input_file, passed_output_file, delim, log):
                       .format(username, hash_u))
 
             # replace last 8 bits of IP with random number, column[5]
+            
+            #if we have already seen this IP address, replace this from the list
             if ip in encountered_ip_address:
                 columns[5] = encountered_ip_address[ip]
+                
+            #else, anonimyze the ip and record it in the list
             else:
                 try:
                     split_ip = ip.split('.')
